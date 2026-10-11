@@ -1,0 +1,22 @@
+{
+  "name": "restaurant-compiled",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "mongodb": "^7.7.0",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "tailwindcss": "^4"
+  }
+}

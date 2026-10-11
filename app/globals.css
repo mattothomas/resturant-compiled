@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-navy: #0B1F3A;
+  --color-offwhite: #FAF7F2;
+  --color-deal: #FF8A00;
+  --color-loss: #D7263D;
+  --color-margin: #1B998B;
+  --font-display: var(--font-archivo);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: #FAF7F2;
+  color: #0B1F3A;
+  font-size: 18px;
+}
+@media (min-width: 768px) { body { font-size: 20px; } }
