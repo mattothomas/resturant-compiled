@@ -3,6 +3,7 @@ import { getOwner } from "@/lib/auth";
 import DealForm from "./DealForm";
 
 export default async function Page() {
-  if (!(await getOwner())) redirect("/login");
-  return <DealForm />;
+  const owner = await getOwner();
+  if (!owner) redirect("/login");
+  return <DealForm restaurantName={owner.name} />;
 }
