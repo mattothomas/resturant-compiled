@@ -1,5 +1,6 @@
 export default {
   turbopack: {
-    rules: { "*.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" } },
+    // globals.css only, so *.module.css keeps CSS-module scoping
+    rules: { "globals.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" } },
   },
 };
