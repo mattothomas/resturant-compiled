@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen bg-paper font-sans text-ink">
         <header className="border-b border-rule bg-ink px-5 py-4 text-paper md:px-8">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
-            <Link href="/home-2" className="flex min-h-11 items-center gap-3 font-bold tracking-tight">
+            <Link href="/" className="flex min-h-11 items-center gap-3 font-bold tracking-tight">
               <span className="grid size-9 place-items-center bg-action text-base font-black text-ink">CC</span>
               <span className="hidden sm:inline">Keep College Ave Cooking</span>
               <span className="sm:hidden">College Ave</span>

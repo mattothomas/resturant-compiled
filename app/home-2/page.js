@@ -3,30 +3,9 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { LessWaste, LocalTells } from "@/components/landing/Neighborhood";
 
 const usd = (cents) => `$${(cents / 100).toFixed(2)}`;
-
-const NOTES = [
-  { number: "01", title: "See what is hot", body: "Live deals from the places you already know, while they are still worth crossing town for." },
-  { number: "02", title: "Keep the kitchen honest", body: "Owners see the actual cost behind every plate before a bad margin becomes a bad month." },
-  { number: "03", title: "Give good food a second shift", body: "A slower dinner service becomes a reason for somebody nearby to walk through the door." },
-];
-
-const LOCAL_MENU_NOTES = [
-  ["Big Bowl Noodle House", "noodle bowls"],
-  ["Sizzling Bites", "chicken thigh platters"],
-  ["Halal Cart", "rice bowl platters"],
-  ["Uncle Chens", "the late-night special"],
-  ["Osaka", "California rolls + gyoza"],
-  ["Subway", "footlongs + wraps"],
-  ["Raising Cane's", "chicken fingers + Texas toast"],
-  ["Big Deans", "Big Daddy 6"],
-  ["Harry's Hotdogs", "dogs with a point of view"],
-  ["Little Anthony's", "pizza + wings"],
-  ["Little Chef", "the neighborhood classic"],
-  ["Double D Diner", "late breakfast energy"],
-  ["Jack's Pizza", "a slice for the walk home"],
-];
 
 export default function AlternateHome() {
   const [deals, setDeals] = useState([]);
@@ -105,23 +84,10 @@ export default function AlternateHome() {
       </section>
 
       <section className="border-y border-[#191c18]/20 bg-[#f7f3ea]">
-        <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
-          <div className="mb-10 flex items-end justify-between gap-5"><div><p className="font-mono text-sm font-bold uppercase tracking-[0.12em] text-[#a63e34]">A small system with a real point</p><h2 className="mt-3 text-4xl font-bold tracking-[-0.03em] md:text-6xl">Less waste. More neighborhood.</h2></div><span className="hidden font-mono text-sm md:inline">HOW IT WORKS / 2026</span></div>
-          <div className="grid gap-px border border-[#191c18]/20 bg-[#191c18]/20 md:grid-cols-3">
-            {NOTES.map((note, index) => <motion.article key={note.number} whileHover={{ y: -5 }} className="bg-[#f7f3ea] p-6 md:min-h-[270px] md:p-8"><span className="font-mono text-sm font-bold text-[#a63e34]">{note.number}</span><h3 className="mt-14 text-2xl font-bold leading-tight">{note.title}</h3><p className="mt-4 text-base leading-relaxed text-[#191c18]/75">{note.body}</p></motion.article>)}
-          </div>
-        </div>
+        <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20"><LessWaste /></div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
-        <div className="flex flex-col gap-5 border-b border-[#191c18] pb-6 md:flex-row md:items-end md:justify-between">
-          <div><p className="font-mono text-sm font-bold uppercase tracking-[0.12em] text-[#a63e34]">A few local tells</p><h2 className="mt-3 text-4xl font-bold tracking-[-0.03em] md:text-6xl">The board knows the neighborhood.</h2></div>
-          <p className="max-w-xs text-base leading-relaxed text-[#191c18]/70">Menu cues from the spots we called. Not live inventory. Just a little proof that this is for here.</p>
-        </div>
-        <div className="grid grid-cols-1 border-l border-[#191c18]/20 md:grid-cols-2 lg:grid-cols-3">
-          {LOCAL_MENU_NOTES.map(([restaurant, cue], index) => <div key={restaurant} className="group flex min-h-24 items-end justify-between gap-4 border-b border-r border-[#191c18]/20 p-4 hover:bg-[#e5b83e]"><span className="font-bold">{restaurant}</span><span className="text-right font-mono text-sm text-[#191c18]/60 group-hover:text-[#191c18]">{cue}</span><span className="absolute hidden" aria-hidden>{String(index + 1).padStart(2, "0")}</span></div>)}
-        </div>
-      </section>
+      <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20"><LocalTells /></div>
 
       <footer className="bg-[#191c18] px-5 py-12 text-[#f5f0e5] md:px-8 md:py-16">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 md:flex-row md:items-end"><div><p className="font-mono text-sm uppercase tracking-[0.12em] text-[#e5b83e]">Keep College Ave cooking</p><p className="mt-4 max-w-lg text-3xl font-bold leading-tight md:text-5xl">The best version of tonight is usually closer than you think.</p></div><Link href="/owner" className="inline-flex min-h-12 items-center border-2 border-[#f5f0e5] px-5 font-bold hover:bg-[#f5f0e5] hover:text-[#191c18]">I run a restaurant</Link></div>
