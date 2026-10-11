@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "@/lib/db";
+import { requireOwner } from "@/lib/auth";
 
 export const maxDuration = 60;
 const client = new Anthropic({ baseURL: "https://api.deepseek.com/anthropic", apiKey: process.env.DEEPSEEK_API_KEY });
@@ -7,6 +8,8 @@ const client = new Anthropic({ baseURL: "https://api.deepseek.com/anthropic", ap
 const parse = (text) => JSON.parse(text.replace(/```json|```/g, "").trim());
 
 export async function POST(req) {
+  const owner = await requireOwner();
+  if (owner instanceof Response) return owner;
   const file = (await req.formData()).get("file");
   if (!file || typeof file === "string") return Response.json({ error: "No file" }, { status: 400 });
 
@@ -16,7 +19,7 @@ export async function POST(req) {
     : { type: "image", source: { type: "base64", media_type: file.type, data } };
 
   const db = await getDb();
-  const names = (await db.collection("ingredients").find({}, { projection: { name: 1 } }).toArray()).map((i) => i.name);
+  const names = (await db.collection("ingredients").find({ restaurantId: owner.restaurantId }, { projection: { name: 1 } }).toArray()).map((i) => i.name);
   const prompt = `Read this supplier invoice. Return ONLY a JSON array, no other text.
 One object per line item:
 {"description": text as printed, "ingredient": one of ${JSON.stringify(names)} or null,
