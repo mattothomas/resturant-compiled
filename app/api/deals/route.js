@@ -10,7 +10,10 @@ export async function GET() {
     // sold-out deals stay listed until expiry so the owner's counter reaches "N of N" and students see "Sold out."
     .find({ expiresAt: { $gt: new Date() } })
     .sort({ _id: -1 }).toArray();
-  return Response.json(deals);
+  const ids = deals.map((deal) => deal.restaurantId).filter(Boolean);
+  const restaurants = await db.collection("restaurants").find({ _id: { $in: ids } }, { projection: { name: 1 } }).toArray();
+  const names = Object.fromEntries(restaurants.map((restaurant) => [String(restaurant._id), restaurant.name]));
+  return Response.json(deals.map((deal) => ({ ...deal, restaurantName: deal.restaurantName || names[String(deal.restaurantId)] || "College Ave kitchen" })));
 }
 
 export async function POST(req) {

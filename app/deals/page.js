@@ -2,6 +2,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 
+const LOCAL_PARTNERS = [
+  "Big Bowl Noodle House", "Sizzling Bites", "Halal Cart", "Uncle Chens", "Osaka",
+  "Subway", "Raising Cane's", "Big Deans", "Harry's Hotdogs", "Little Anthony's",
+  "Little Chef", "Double D Diner", "Jack's Pizza",
+];
+
 const usd = (c) => `$${(c / 100).toFixed(2)}`;
 
 function Countdown({ to }) {
@@ -63,6 +69,6 @@ export default function Page() {
   }, []);
 
   if (!deals) return <p className="text-ink">Loading tonight&apos;s board…</p>;
-  if (!deals.length) return <p className="text-xl font-bold">No deals right now. Check back after the dinner rush.</p>;
+  if (!deals.length) return <div className="mx-auto max-w-3xl"><div className="mb-10 border-b border-rule pb-6"><p className="eyebrow">College Ave / partner board</p><h1 className="mt-2 text-4xl font-bold tracking-tight md:text-6xl">The next deal is being cooked.</h1><p className="mt-4 max-w-xl text-lg text-ink">No live offers right now. These are the kitchens we are building the board with.</p></div><div className="grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">{LOCAL_PARTNERS.map((name) => <div key={name} className="bg-surface p-5 font-bold">{name}</div>)}</div><p className="mt-8 font-mono text-sm uppercase tracking-[0.08em] text-ink">Check back after the dinner rush for live offers.</p></div>;
   return <div className="mx-auto max-w-md"><div className="mb-8 border-b border-rule pb-5"><p className="eyebrow">College Ave / available now</p><h1 className="mt-2 text-4xl font-bold tracking-tight">Eat well. Waste less.</h1><p className="mt-3 text-ink">Real food, available for a little less while it&apos;s still hot.</p></div><div className="flex flex-col gap-4">{deals.map(d => <Card key={d._id} d={d} />)}</div></div>;
 }
