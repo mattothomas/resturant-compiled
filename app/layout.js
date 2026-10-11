@@ -1,24 +1,30 @@
 import Link from "next/link";
-import { Archivo_Black, Inter } from "next/font/google";
+import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const archivo = Archivo_Black({ weight: "400", subsets: ["latin"], variable: "--font-archivo" });
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const space = Space_Grotesk({ subsets: ["latin"], variable: "--font-space" });
+const mono = IBM_Plex_Mono({ weight: "400", subsets: ["latin"], variable: "--font-mono" });
 
-export const metadata = { title: "Keep College Ave Cooking" };
+export const metadata = { title: "Keep College Ave Cooking", description: "Know the cost. Move the food." };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${archivo.variable} ${inter.variable}`}>
-      <body className="min-h-screen bg-offwhite font-sans text-navy">
-        <header className="flex items-center justify-between gap-4 bg-navy px-4 py-3 text-offwhite">
-          <Link href="/" className="flex min-h-11 items-center font-display text-xl md:text-2xl">Keep College Ave Cooking</Link>
-          <nav className="flex gap-4 text-base font-bold md:gap-6 md:text-lg">
-            <Link href="/deals" className="py-2">I&apos;m hungry</Link>
-            <Link href="/owner" className="py-2">I run a restaurant</Link>
+    <html lang="en" className={`${space.variable} ${mono.variable}`}>
+      <body className="min-h-screen bg-paper font-sans text-ink">
+        <header className="border-b border-rule bg-ink px-5 py-4 text-paper md:px-8">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
+            <Link href="/" className="flex min-h-11 items-center gap-3 font-bold tracking-tight">
+              <span className="grid size-9 place-items-center bg-action text-sm font-black text-ink">CC</span>
+              <span className="hidden sm:inline">Keep College Ave Cooking</span>
+              <span className="sm:hidden">College Ave</span>
+            </Link>
+            <nav className="flex items-center gap-5 font-bold md:gap-8">
+              <Link href="/deals" className="inline-flex min-h-11 items-center py-2 text-paper hover:text-action">Deals for tonight</Link>
+              <Link href="/owner" className="inline-flex min-h-11 items-center border-l border-paper/40 py-2 pl-5 text-action md:pl-8">Owner desk</Link>
           </nav>
+          </div>
         </header>
-        <main className="mx-auto max-w-5xl p-4 md:p-8">{children}</main>
+        <main className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-12">{children}</main>
       </body>
     </html>
   );

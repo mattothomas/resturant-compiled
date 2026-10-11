@@ -3,13 +3,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
 
-const door = "flex min-h-14 w-full items-center justify-center rounded-xl px-6 text-xl font-bold md:min-h-16 md:w-auto";
+const door = "flex min-h-12 w-full items-center justify-center border-2 px-6 text-base font-bold md:w-auto";
 
 function Doors({ dark }) {
   return (
     <div className="flex flex-col gap-4 md:flex-row">
-      <Link href="/deals" className={`${door} bg-deal text-navy`}>I&apos;m hungry</Link>
-      <Link href="/owner" className={`${door} border-4 ${dark ? "border-offwhite text-offwhite" : "border-navy text-navy"}`}>I run a restaurant</Link>
+      <Link href="/deals" className={`${door} border-ink bg-action text-ink hover:-translate-y-0.5`}>See tonight&apos;s deals</Link>
+      <Link href="/owner" className={`${door} ${dark ? "border-paper text-paper hover:bg-paper hover:text-ink" : "border-ink text-ink hover:bg-ink hover:text-paper"}`}>Open the owner desk</Link>
     </div>
   );
 }
@@ -36,25 +36,30 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-12 md:gap-16">
-      <section className="flex flex-col gap-6 pt-4 md:pt-10">
-        <h1 className="font-display text-[40px] leading-[1.05] md:text-7xl">Keep College Ave cooking.</h1>
-        <p className="max-w-3xl">
-          We show State College restaurants what every plate really costs, and turn tonight&apos;s leftovers into deals for you.
-        </p>
+    <div className="flex flex-col gap-16 md:gap-24">
+      <section className="grid gap-10 pt-4 md:grid-cols-[1.2fr_0.8fr] md:items-end md:pt-12">
+        <div className="flex flex-col gap-6">
+          <p className="eyebrow">State College / restaurant economics</p>
+          <h1 className="max-w-3xl text-5xl font-bold leading-[0.98] tracking-tight md:text-8xl">Keep College Ave cooking.</h1>
+          <p className="max-w-2xl text-xl leading-relaxed text-ink/65">
+            Know what every plate costs. Move the food that needs a good home tonight.
+          </p>
+        </div>
         <Doors />
       </section>
 
       {count && (
-        <div className="rounded-2xl bg-navy px-5 py-4 text-xl font-bold text-offwhite md:text-2xl">
-          <span className="text-deal">Live now:</span> {count} {count === 1 ? "deal" : "deals"} downtown, ending tonight
+        <div className="flex items-center justify-between gap-4 border-y-2 border-ink py-4 text-lg font-bold md:text-xl">
+          <span><span className="text-loss">Live now:</span> {count} {count === 1 ? "deal" : "deals"} downtown</span>
+          <span className="mono text-xs text-ink">ENDING TONIGHT</span>
         </div>
       )}
 
-      <section className="grid gap-4 md:grid-cols-2 md:gap-6">
+      <section className="grid gap-px border border-rule bg-rule md:grid-cols-2">
         {SIDES.map(({ who, points }) => (
-          <Card key={who} className="flex flex-col gap-3">
-            <h2 className="text-[28px] font-bold md:text-[40px]">{who}</h2>
+          <Card key={who} className="flex flex-col gap-4">
+            <p className="eyebrow">For {who.toLowerCase()}</p>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{who}</h2>
             <ul className="flex flex-col gap-2">
               {points.map((p) => <li key={p}>{p}</li>)}
             </ul>
@@ -66,25 +71,26 @@ export default function Page() {
         <h2 className="text-[28px] font-bold md:text-[40px]">How it works</h2>
         <ol className="grid gap-4 md:grid-cols-3 md:gap-6">
           {STEPS.map(({ icon, text }, i) => (
-            <li key={text} className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow md:flex-col md:items-start">
-              <span className="text-4xl" aria-hidden>{icon}</span>
-              <span className="font-bold"><span className="font-display text-navy">{i + 1}.</span> {text}</span>
+            <li key={text} className="flex items-center gap-4 border border-rule bg-surface p-5 md:flex-col md:items-start">
+              <span className="mono text-sm font-bold text-loss" aria-hidden>0{i + 1}</span>
+              <span className="font-bold">{text}</span>
             </li>
           ))}
         </ol>
       </section>
 
       <section>
-        <blockquote className="rounded-2xl border-l-8 border-deal bg-white p-6 shadow">
-          <p className="text-2xl font-bold md:text-3xl">“[Quote from today&apos;s visit]”</p>
-          <footer className="mt-3">[Owner], [Restaurant], [Street]</footer>
+        <blockquote className="border-l-4 border-action bg-surface p-6">
+          <p className="text-2xl font-bold md:text-3xl">Good food should not become a spreadsheet problem.</p>
+          <footer className="mono mt-3 text-xs text-ink">THE IDEA / COLLEGE AVE</footer>
         </blockquote>
       </section>
 
-      <footer className="flex flex-col gap-6 rounded-2xl bg-navy p-6 text-offwhite md:p-10">
-        <h2 className="font-display text-[28px] md:text-[40px]">Hungry or cooking?</h2>
+      <footer className="flex flex-col gap-6 bg-ink p-6 text-paper md:p-10">
+        <p className="eyebrow text-paper">Keep the neighborhood moving</p>
+        <h2 className="text-3xl font-bold md:text-5xl">Hungry or cooking?</h2>
         <Doors dark />
-        <p className="text-base">Built in 3 hours at c0mpiled-15, State College</p>
+        <p className="mono text-xs text-paper">BUILT FOR COLLEGE AVE / STATE COLLEGE</p>
       </footer>
     </div>
   );

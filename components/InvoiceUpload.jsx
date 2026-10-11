@@ -22,7 +22,7 @@ async function shrink(file) {
     (b) => r(new File([b], "invoice.jpg", { type: "image/jpeg" })), "image/jpeg", 0.85));
 }
 
-const input = "min-h-11 w-full rounded-lg border-2 border-navy/20 bg-white px-2 text-base";
+const input = "min-h-11 w-full border border-rule bg-white px-2 text-sm";
 
 export default function InvoiceUpload({ onSaved }) {
   const fileRef = useRef(null);
@@ -91,14 +91,14 @@ export default function InvoiceUpload({ onSaved }) {
         {busy === "reading" ? "Reading invoice…" : "Upload invoice"}
       </Button>
       {busy === "reading" && (
-        <p className="text-base" role="status">Reading every line. This takes about 20 seconds.</p>
+        <p className="mono text-xs text-ink" role="status">READING EVERY LINE / ABOUT 20 SECONDS</p>
       )}
 
       {error && <p className="rounded-lg bg-loss px-4 py-3 font-bold text-white" role="alert">{error}</p>}
       {raw && (
         <details className="text-base">
           <summary className="cursor-pointer font-bold">What the AI saw (type the numbers below)</summary>
-          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-offwhite p-3 text-base">{raw}</pre>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap border border-rule bg-paper p-3 text-sm">{raw}</pre>
         </details>
       )}
 
@@ -106,9 +106,9 @@ export default function InvoiceUpload({ onSaved }) {
         <div className="space-y-4">
           <h2 className="font-display text-2xl md:text-3xl">Check the lines, then save</h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-base">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <thead>
-                <tr className="border-b-2 border-navy">
+                <tr className="border-b-2 border-ink">
                   {["Description", "Ingredient", "Packs", "Size", "Unit", "Price ($)"].map((h) => (
                     <th key={h} className="px-1 py-2 font-bold">{h}</th>
                   ))}
@@ -116,7 +116,7 @@ export default function InvoiceUpload({ onSaved }) {
               </thead>
               <tbody>
                 {lines.map((l, i) => (
-                  <tr key={i} className="border-b border-navy/10 align-top">
+                  <tr key={i} className="border-b border-rule align-top">
                     <td className="px-1 py-2"><input className={input} value={l.description ?? ""} onChange={(e) => edit(i, "description", e.target.value)} aria-label="Description" /></td>
                     <td className="px-1 py-2">
                       <select className={input} value={l.ingredient ?? ""} onChange={(e) => edit(i, "ingredient", e.target.value || null)} aria-label="Ingredient">
@@ -139,7 +139,7 @@ export default function InvoiceUpload({ onSaved }) {
           </div>
           <div className="flex flex-col gap-3 md:flex-row">
             <Button onClick={save} disabled={!!busy}>{busy === "saving" ? "Saving…" : "Save costs"}</Button>
-            <button type="button" className="min-h-14 rounded-xl border-2 border-navy px-6 text-lg font-bold" onClick={() => setLines((ls) => [...ls, { ...blankLine }])}>
+            <button type="button" className="min-h-12 border-2 border-ink px-5 text-sm font-bold hover:bg-ink hover:text-paper" onClick={() => setLines((ls) => [...ls, { ...blankLine }])}>
               Add line
             </button>
           </div>
@@ -155,7 +155,7 @@ export default function InvoiceUpload({ onSaved }) {
             {result.updated.map((u) => {
               const up = u.newCost > u.oldCost, same = u.newCost === u.oldCost;
               return (
-                <li key={u.ingredient} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-navy/10 py-2">
+                <li key={u.ingredient} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule py-2">
                   <span className="font-bold">{u.ingredient}</span>
                   <span>
                     {perUnit(u.oldCost, unitOf[u.ingredient] ?? "g")} →{" "}
