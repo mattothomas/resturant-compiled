@@ -44,7 +44,7 @@ function Card({ d }) {
         <span className="mono text-xs text-ink">ENDS IN <Countdown to={d.expiresAt} /></span>
       </p>
       {claimed ? (
-        <motion.p initial={{ scale: 0.98 }} animate={{ scale: 1 }} className="mt-4 bg-margin p-4 text-lg font-bold text-white">Claimed. Show this screen at the counter.</motion.p>
+        <motion.p initial={{ scale: 0.98 }} animate={{ scale: 1 }} className="mt-4 bg-margin p-4 text-lg font-bold text-white">Claimed! Show this screen at the counter.</motion.p>
       ) : soldOut || d.qtyLeft <= 0 ? (
         <p className="mt-4 bg-loss p-4 text-lg font-bold text-white">Sold out.</p>
       ) : (
