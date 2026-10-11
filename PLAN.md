@@ -20,24 +20,24 @@ The app is four screens and five API routes. Everything else is seeded, faked, o
 
 ## Stack and setup
 
-One Next.js app deployed to Vercel, MongoDB Atlas for data, the Claude API for reading invoices. Deploy a blank page in the first 15 minutes so environment problems show up early, not at 7:30.
+One Next.js app deployed to Vercel, MongoDB Atlas for data, the DeepSeek API for reading invoices. Deploy a blank page in the first 15 minutes so environment problems show up early, not at 7:30.
 
 | Piece | Choice |
 | --- | --- |
 | App | Next.js (App Router) + Tailwind, from `npx create-next-app@latest` |
 | Hosting | Vercel, deploy on every git push |
 | Database | MongoDB Atlas free cluster, `mongodb` npm driver |
-| Invoice reading | `@anthropic-ai/sdk`, model `claude-sonnet-5-5` (accepts images and PDFs) |
+| Invoice reading | `@anthropic-ai/sdk` pointed at DeepSeek's Anthropic-compatible endpoint, model `deepseek-v4.1-flash` (confirm it accepts images; if not, see "If you're behind") |
 
 Setup checklist:
 
 - [ ] Create the Next.js app, push to GitHub, import into Vercel
 - [ ] Create the Atlas cluster; for tonight, allow access from anywhere (Vercel's IPs change). Delete the cluster or lock it down after the event.
-- [ ] Put `MONGODB_URI` and `ANTHROPIC_API_KEY` in `.env.local` and in Vercel's environment variables. Never prefix them with `NEXT_PUBLIC_`, or they ship to the browser.
+- [ ] Put `MONGODB_URI` and `DEEPSEEK_API_KEY` in `.env.local` and in Vercel's environment variables. Never prefix them with `NEXT_PUBLIC_`, or they ship to the browser.
 - [ ] Add `export const maxDuration = 60;` to the invoice route so a slow AI call isn't cut off
 - [ ] Shrink photos in the browser before upload (about 1600px wide, JPEG). Vercel functions reject request bodies over about 4.5 MB, and phone photos are often bigger.
 
-API reference: [Claude API docs](https://docs.claude.com/en/api/overview)
+API reference: [DeepSeek API docs](https://api-docs.deepseek.com/)
 
 ## Build order
 
@@ -109,7 +109,7 @@ The prompt includes your ingredient names, so the AI does the matching too and y
 ````js
 import Anthropic from "@anthropic-ai/sdk";
 export const maxDuration = 60;
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY
+const client = new Anthropic({ baseURL: "https://api.deepseek.com/anthropic", apiKey: process.env.DEEPSEEK_API_KEY });
 
 export async function POST(req) {
   const form = await req.formData();
@@ -128,7 +128,7 @@ One object per line item:
 Example: "WINGS JUMBO 4/10LB 136.00" -> packCount 4, packSize 10, packUnit "lb", linePrice 136`;
 
   const msg = await client.messages.create({
-    model: "claude-sonnet-5-5",
+    model: "deepseek-v4.1-flash",
     max_tokens: 2000,
     messages: [{ role: "user", content: [fileBlock, { type: "text", text: prompt }] }],
   });
