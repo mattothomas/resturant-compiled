@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "repair-demo": "node --env-file=.env.local scripts/repair-demo-data.mjs",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "start": "next start"
   },
