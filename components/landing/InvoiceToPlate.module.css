@@ -1,0 +1,106 @@
+/* Invoice -> plate cost. One 10s cycle (1s = 10%). Base styles are the final frame,
+   which is what prefers-reduced-motion users see. Colors copied from app/globals.css. */
+.wrap {
+  --ink: #1d211d; --paper: #f3efe6; --surface: #fbfaf6; --action: #e7b83f; --loss: #a63e34; --rule: #d8d1c4;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.cycle, .top, .rows { display: grid; gap: 12px; }
+.cycle { gap: 16px; }
+
+.paper { position: relative; overflow: hidden; padding: 12px 14px; background: #fff; border: 1px solid var(--rule); box-shadow: 0 2px 0 var(--rule); font-family: var(--font-mono); }
+.line { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 12px; }
+.scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--action); box-shadow: 0 0 12px var(--action); opacity: 0; }
+
+.rowItem { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border: 1px solid var(--rule); background: var(--surface); }
+.ing { flex: 1 1 7rem; font-weight: 700; }
+.field { display: inline-flex; padding: 4px 8px; border: 1px solid var(--ink); background: #fff; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.old, .new { display: inline-block; overflow: hidden; white-space: nowrap; }
+.old { width: 0; }
+.new { width: 6ch; }
+.chipS { padding: 0 10px; border: 2px solid var(--action); border-radius: 999px; font-weight: 700; }
+.save { justify-self: start; padding: 10px 20px; border: 2px solid var(--ink); background: var(--action); font-size: 18px; font-weight: 700; }
+
+.dish { padding: 14px; border: 2px solid var(--ink); background: var(--surface); }
+.dishHead, .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.dishName { font-size: 20px; font-weight: 700; }
+.badge, .up { padding: 2px 10px; border-radius: 999px; font-weight: 700; }
+.badge { background: var(--loss); color: #fff; }
+.up { border: 2px solid var(--loss); color: var(--loss); }
+.nums { display: flex; align-items: baseline; gap: 10px; margin: 6px 0; }
+.stackN { display: inline-grid; font-variant-numeric: tabular-nums; }
+.stackN > * { grid-area: 1 / 1; }
+.nums .stackN { font-size: 40px; font-weight: 700; line-height: 1.1; color: var(--loss); }
+.before { opacity: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .cycle, .paper, .scan, .rowItem, .fix, .old, .new, .save, .dish, .before, .after, .badge, .up {
+    animation-duration: 10s; animation-timing-function: linear; animation-iteration-count: infinite; animation-fill-mode: both;
+  }
+  .cycle { animation-name: cycle; }
+  .paper { animation-name: paper; }
+  .scan { animation-name: scan; }
+  .rowItem { animation-name: row; }
+  /* chained: each extracted row lands 0.4s after the previous one */
+  .rowItem:nth-child(2) { animation-delay: 0.4s; }
+  .rowItem:nth-child(3) { animation-delay: 0.8s; }
+  .fix { animation-name: fix; }
+  .old { animation-name: old; }
+  .new { animation-name: new; }
+  .save { animation-name: save; }
+  .dish { animation-name: dish; }
+  .before { animation-name: before; }
+  .after { animation-name: after; }
+  .badge { animation-name: badge; }
+  .up { animation-name: up; }
+}
+
+/* 9–10s: hold, fade, restart */
+@keyframes cycle { 0%, 90% { opacity: 1; } 97%, 100% { opacity: 0; } }
+/* 0–1.5s: paper slides in */
+@keyframes paper { 0% { opacity: 0; transform: translateX(-24px); } 15%, 100% { opacity: 1; transform: none; } }
+/* 1.5–3s: scan line sweeps */
+@keyframes scan {
+  0%, 14.9% { opacity: 0; top: 0; }
+  15% { opacity: 1; top: 0; }
+  30% { opacity: 1; top: calc(100% - 3px); }
+  31%, 100% { opacity: 0; top: calc(100% - 3px); }
+}
+/* 3–4.5s: rows appear (hidden again before the next cycle so delayed rows don't leak) */
+@keyframes row {
+  0%, 30% { opacity: 0; transform: translateY(8px); }
+  34%, 88% { opacity: 1; transform: none; }
+  92%, 100% { opacity: 0; transform: none; }
+}
+/* 4.5–6s: wings field highlights, 186.00 is deleted and 136.00 typed */
+@keyframes fix {
+  0%, 44% { background: #fff; box-shadow: none; }
+  46%, 58% { background: #fdf1cf; box-shadow: 0 0 0 3px var(--action); }
+  61%, 100% { background: #fff; box-shadow: none; }
+}
+@keyframes old {
+  0%, 48% { width: 6ch; animation-timing-function: steps(6, end); }
+  51%, 100% { width: 0; }
+}
+@keyframes new {
+  0%, 51% { width: 0; animation-timing-function: steps(6, end); }
+  57%, 100% { width: 6ch; }
+}
+/* 6–7s: Save costs presses */
+@keyframes save {
+  0%, 44% { opacity: 0; transform: none; }
+  47%, 60% { opacity: 1; transform: none; }
+  63% { opacity: 1; transform: scale(0.97); filter: brightness(0.9); }
+  66%, 100% { opacity: 1; transform: none; filter: none; }
+}
+/* 7–9s: dish card, 33% -> 38%, badge pops, wings chip */
+@keyframes dish { 0%, 70% { opacity: 0; transform: translateY(12px); } 73%, 100% { opacity: 1; transform: none; } }
+@keyframes before { 0%, 76% { opacity: 1; } 76.1%, 100% { opacity: 0; } }
+@keyframes after { 0%, 76% { opacity: 0; } 76.1%, 100% { opacity: 1; } }
+@keyframes badge {
+  0%, 77% { opacity: 0; transform: scale(0.6); }
+  80% { opacity: 1; transform: scale(1.12); }
+  82%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes up { 0%, 80% { opacity: 0; } 83%, 100% { opacity: 1; } }
