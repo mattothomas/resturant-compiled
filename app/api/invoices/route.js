@@ -1,9 +1,15 @@
+import { getDb } from "@/lib/db";
 import { requireOwner } from "@/lib/auth";
 
-// placeholder: owned by a lane branch, see CONTRACT.md
-async function notBuilt() {
+export const dynamic = "force-dynamic";
+
+export async function GET() {
   const owner = await requireOwner();
   if (owner instanceof Response) return owner;
-  return Response.json({ error: "Not built yet" }, { status: 501 });
+  const rows = await (await getDb()).collection("invoices")
+    .find({ restaurantId: owner.restaurantId }).sort({ date: -1, createdAt: -1 }).toArray();
+  return Response.json(rows.map((r) => ({
+    _id: r._id, vendor: r.vendor, date: r.date, lineCount: r.lines.length,
+    total: Math.round(r.lines.reduce((s, l) => s + (Number(l.linePrice) || 0), 0) * 100), // cents
+  })));
 }
-export const GET = notBuilt;
