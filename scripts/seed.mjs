@@ -1,4 +1,8 @@
+import { randomBytes, scryptSync } from "node:crypto";
 import { MongoClient } from "mongodb";
+
+const password = process.env.DEMO_PASSWORD;
+if (!password) throw new Error("Set DEMO_PASSWORD in .env.local");
 
 const ingredients = [
   { name: "flour", unit: "g", costPerUnit: 0.1323 },
@@ -26,10 +30,20 @@ const dishes = [
 
 const client = await new MongoClient(process.env.MONGODB_URI).connect();
 const db = client.db();
-for (const [name, docs] of [["ingredients", ingredients], ["dishes", dishes]]) {
+for (const name of ["restaurants", "sessions", "ingredients", "dishes", "deals", "invoices", "prices"])
   await db.collection(name).deleteMany({});
-  await db.collection(name).insertMany(docs);
-}
-await db.collection("deals").deleteMany({});
-console.log(`seeded ${ingredients.length} ingredients, ${dishes.length} dishes, cleared deals`);
+await db.collection("restaurants").createIndex({ email: 1 }, { unique: true });
+await db.collection("sessions").createIndex({ tokenHash: 1 }, { unique: true });
+
+// same hashing as lib/auth.js hashPassword
+const salt = randomBytes(16).toString("hex");
+const { insertedId: restaurantId } = await db.collection("restaurants").insertOne({
+  name: "Demo Kitchen", email: "demo@kitchen.test", salt, passwordHash: scryptSync(password, salt, 64).toString("hex"),
+});
+const date = new Date(new Date().toISOString().slice(0, 10)); // prices are dated by calendar day
+await db.collection("ingredients").insertMany(ingredients.map((i) => ({ restaurantId, ...i })));
+await db.collection("dishes").insertMany(dishes.map((d) => ({ restaurantId, ...d })));
+await db.collection("prices").insertMany(ingredients.map((i) =>
+  ({ restaurantId, ingredient: i.name, costPerUnit: i.costPerUnit, source: "manual", date })));
+console.log(`seeded Demo Kitchen (demo@kitchen.test): ${ingredients.length} ingredients, ${dishes.length} dishes; cleared sessions, invoices, deals`);
 await client.close();

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { RESTAURANT_NAME } from "@/lib/config";
 
 const usd = (c) => `$${(c / 100).toFixed(2)}`;
 
@@ -29,7 +28,7 @@ function Card({ d }) {
 
   return (
     <div className="rounded-2xl border-4 border-navy bg-white p-5">
-      <p className="text-lg font-bold">{RESTAURANT_NAME}</p>
+      <p className="text-lg font-bold">{d.restaurantName}</p>
       <h2 className="font-display text-3xl leading-tight">{d.dishName}</h2>
       <p className="mt-2 flex items-baseline gap-3">
         <span className="text-4xl font-black text-navy">{usd(d.dealPrice)}</span>
