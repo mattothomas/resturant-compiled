@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "@/lib/db";
 
 export const maxDuration = 60;
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY
+const client = new Anthropic({ baseURL: "https://api.deepseek.com/anthropic", apiKey: process.env.DEEPSEEK_API_KEY });
 
 const parse = (text) => JSON.parse(text.replace(/```json|```/g, "").trim());
 
@@ -29,11 +29,9 @@ Example: "WINGS JUMBO 4/10LB 136.00" -> packCount 4, packSize 10, packUnit "lb",
   for (let attempt = 0; attempt < 2; attempt++) {
     let msg;
     try {
-      msg = await client.beta.messages.create({
-        model: "claude-sonnet-5-5",
-        max_tokens: 16000,
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
+      msg = await client.messages.create({
+        model: "deepseek-flash",
+        max_tokens: 8000, // deepseek-flash thinks first; 2000 sometimes ran out before any text
         messages: [{ role: "user", content: [fileBlock, { type: "text", text: prompt }] }],
       });
     } catch (e) {

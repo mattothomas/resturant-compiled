@@ -31,7 +31,7 @@ export default function Page() {
   useEffect(() => {
     fetch("/api/deals")
       .then((r) => r.json())
-      .then((d) => Array.isArray(d) && d.length && setCount(d.length))
+      .then((d) => Array.isArray(d) && setCount(d.filter((x) => x.qtyLeft > 0).length || null))
       .catch(() => {}); // ponytail: strip simply stays hidden on failure
   }, []);
 

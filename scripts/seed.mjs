@@ -30,5 +30,6 @@ for (const [name, docs] of [["ingredients", ingredients], ["dishes", dishes]]) {
   await db.collection(name).deleteMany({});
   await db.collection(name).insertMany(docs);
 }
-console.log(`seeded ${ingredients.length} ingredients, ${dishes.length} dishes`);
+await db.collection("deals").deleteMany({});
+console.log(`seeded ${ingredients.length} ingredients, ${dishes.length} dishes, cleared deals`);
 await client.close();

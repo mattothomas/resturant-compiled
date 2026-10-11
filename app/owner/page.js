@@ -61,7 +61,7 @@ function Stat({ label, children }) {
   return (
     <div>
       <dt className="text-base">{label}</dt>
-      <dd className="text-3xl font-bold md:text-[40px]">{children}</dd>
+      <dd className="text-[32px] font-bold md:text-[40px]">{children}</dd>
     </div>
   );
 }

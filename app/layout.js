@@ -12,7 +12,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${archivo.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-offwhite font-sans text-navy">
         <header className="flex items-center justify-between gap-4 bg-navy px-4 py-3 text-offwhite">
-          <Link href="/" className="font-display text-xl md:text-2xl">Keep College Ave Cooking</Link>
+          <Link href="/" className="flex min-h-11 items-center font-display text-xl md:text-2xl">Keep College Ave Cooking</Link>
           <nav className="flex gap-4 text-base font-bold md:gap-6 md:text-lg">
             <Link href="/deals" className="py-2">I&apos;m hungry</Link>
             <Link href="/owner" className="py-2">I run a restaurant</Link>

@@ -38,7 +38,7 @@ function Card({ d }) {
       <p className="mt-2 text-lg font-bold">{d.qtyLeft} left · ends in <Countdown to={d.expiresAt} /></p>
       {claimed ? (
         <p className="mt-4 rounded-xl bg-margin p-4 text-xl font-bold text-white">Claimed! Show this screen at the counter.</p>
-      ) : soldOut ? (
+      ) : soldOut || d.qtyLeft <= 0 ? (
         <p className="mt-4 rounded-xl bg-loss p-4 text-xl font-bold text-white">Sold out.</p>
       ) : (
         <button onClick={claim} className="mt-4 h-20 w-full rounded-xl bg-deal text-3xl font-black text-navy">Claim</button>

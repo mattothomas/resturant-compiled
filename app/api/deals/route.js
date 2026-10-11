@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const db = await getDb();
   const deals = await db.collection("deals")
-    .find({ qtyLeft: { $gt: 0 }, expiresAt: { $gt: new Date() } })
+    // sold-out deals stay listed until expiry so the owner's counter reaches "N of N" and students see "Sold out."
+    .find({ expiresAt: { $gt: new Date() } })
     .sort({ _id: -1 }).toArray();
   return Response.json(deals);
 }
