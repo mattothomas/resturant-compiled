@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
 import DealDrop from "@/components/landing/DealDrop";
 import InvoiceToPlate from "@/components/landing/InvoiceToPlate";
+import { LessWaste, LocalTells } from "@/components/landing/Neighborhood";
 
 const door = "flex h-16 w-full items-center justify-center border-2 px-8 text-xl font-bold md:w-auto";
 
@@ -71,6 +72,10 @@ export default function Page() {
           </Card>
         </div>
       </section>
+
+      <LessWaste />
+
+      <LocalTells />
 
       <section>
         <blockquote className="border-l-4 border-action bg-surface p-6">
