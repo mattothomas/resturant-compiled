@@ -72,7 +72,7 @@ function Deal() {
           <p className="text-2xl font-bold"><Money cents={cents} /></p>
           <p className="mono text-xs text-ink">CLAIMED</p>
         </div>
-        <p className="text-8xl font-bold leading-none tracking-tight md:text-[11rem]">{claimed}<span className="text-ink">/{qty}</span></p>
+        <p className="text-8xl font-bold leading-none tracking-tight md:text-[11rem]">{claimed}{" "}<span className="mx-3 text-ink/70">of</span>{" "}{qty}</p>
         <p className="text-lg text-ink">Watch this number move as customers claim the offer.</p>
       </Card>
     );
