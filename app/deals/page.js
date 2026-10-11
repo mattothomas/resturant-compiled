@@ -1,10 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-<<<<<<< HEAD
 import { motion } from "motion/react";
-import { RESTAURANT_NAME } from "@/lib/config";
-=======
->>>>>>> origin/main
 
 const usd = (c) => `$${(c / 100).toFixed(2)}`;
 
@@ -32,18 +28,12 @@ function Card({ d }) {
   }
 
   return (
-<<<<<<< HEAD
     <motion.article layout initial={{ y: 10 }} animate={{ y: 0 }} className="border border-rule bg-surface p-5">
       <div className="flex items-center justify-between gap-3 border-b border-rule pb-3">
-        <p className="eyebrow">{RESTAURANT_NAME}</p>
+        <p className="eyebrow">{d.restaurantName}</p>
         <span className="mono text-xs text-ink">LIVE OFFER</span>
       </div>
       <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight">{d.dishName}</h2>
-=======
-    <div className="rounded-2xl border-4 border-navy bg-white p-5">
-      <p className="text-lg font-bold">{d.restaurantName}</p>
-      <h2 className="font-display text-3xl leading-tight">{d.dishName}</h2>
->>>>>>> origin/main
       <p className="mt-2 flex items-baseline gap-3">
         <span className="text-5xl font-bold tracking-tight">{usd(d.dealPrice)}</span>
         <span className="mono text-sm text-ink line-through">was {usd(d.normalPrice)}</span>
