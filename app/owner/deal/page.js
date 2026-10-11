@@ -1,8 +1,8 @@
-"use client";
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { Button, Card, Money } from "@/components/ui";
+import { redirect } from "next/navigation";
+import { getOwner } from "@/lib/auth";
+import DealForm from "./DealForm";
 
+<<<<<<< HEAD
 export default function Page() {
   return <Suspense><Deal /></Suspense>;
 }
@@ -121,4 +121,9 @@ function Deal() {
       <Button onClick={drop} disabled={!d || tooLow} className="md:min-h-20 md:w-full md:text-3xl">Drop deal</Button>
     </Card>
   );
+=======
+export default async function Page() {
+  if (!(await getOwner())) redirect("/login");
+  return <DealForm />;
+>>>>>>> origin/main
 }

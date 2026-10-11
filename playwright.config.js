@@ -6,7 +6,7 @@ export default defineConfig({
   testDir: "tests",
   timeout: 120_000, // the invoice step makes a real AI call
   globalSetup: "./tests/global-setup.js",
-  use: { baseURL: BASE_URL ?? "http://localhost:3000" },
+  use: { baseURL: BASE_URL ?? "http://localhost:3000", storageState: "tests/fixtures/auth.json" }, // written by global-setup
   webServer: BASE_URL ? undefined : {
     command: "npm run dev",
     url: "http://localhost:3000",

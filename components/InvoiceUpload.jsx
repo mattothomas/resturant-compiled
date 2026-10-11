@@ -32,6 +32,7 @@ export default function InvoiceUpload({ onSaved }) {
   const [error, setError] = useState(null);
   const [raw, setRaw] = useState("");
   const [result, setResult] = useState(null);
+  const [meta, setMeta] = useState({}); // { vendor, date, fileName }
 
   useEffect(() => {
     fetch("/api/ingredients", { cache: "no-store" }).then((r) => r.json()).then(setIngredients).catch(() => {});
@@ -43,6 +44,7 @@ export default function InvoiceUpload({ onSaved }) {
     e.target.value = "";
     if (!file) return;
     setBusy("reading"); setError(null); setRaw(""); setResult(null); setLines(null);
+    setMeta({ vendor: "", date: new Date().toLocaleDateString("en-CA"), fileName: file.name }); // en-CA = YYYY-MM-DD, local day
     try {
       const body = new FormData();
       body.append("file", await shrink(file));
@@ -70,7 +72,7 @@ export default function InvoiceUpload({ onSaved }) {
       const res = await fetch("/api/invoice/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lines }),
+        body: JSON.stringify({ ...meta, lines }),
       });
       if (!res.ok) throw new Error();
       setResult(await res.json());
@@ -105,6 +107,14 @@ export default function InvoiceUpload({ onSaved }) {
       {lines && (
         <div className="space-y-4">
           <h2 className="font-display text-2xl md:text-3xl">Check the lines, then save</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block font-bold">Vendor
+              <input className={`${input} mt-1 min-h-14 text-xl`} value={meta.vendor} onChange={(e) => setMeta((m) => ({ ...m, vendor: e.target.value }))} />
+            </label>
+            <label className="block font-bold">Invoice date
+              <input type="date" required className={`${input} mt-1 min-h-14 text-xl`} value={meta.date} onChange={(e) => setMeta((m) => ({ ...m, date: e.target.value }))} />
+            </label>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead>

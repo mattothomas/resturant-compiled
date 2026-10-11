@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -101,6 +102,15 @@ function Stat({ label, children }) {
       <dd className="mt-1 text-2xl font-bold md:text-3xl">{children}</dd>
     </dl>
   );
+=======
+import { redirect } from "next/navigation";
+import { getOwner } from "@/lib/auth";
+import Dashboard from "./Dashboard";
+
+export default async function Page() {
+  if (!(await getOwner())) redirect("/login");
+  return <Dashboard />;
+>>>>>>> origin/main
 }
 
 function formatDelta(cents) {
