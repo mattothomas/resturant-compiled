@@ -1,70 +1,159 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import InvoiceUpload from "@/components/InvoiceUpload";
-import { Card, Money, Badge } from "@/components/ui";
+import { Button, Card, Money, Badge } from "@/components/ui";
+import { OVER_TARGET } from "@/lib/cost";
+
+const TARGET = Math.round(OVER_TARGET * 100);
+const priced = (d) => d.plateCost > 0; // null (missing ingredient cost) or 0 → no number to show
+const pct = (d) => `${Math.round(d.foodCostPct * 100)}%`;
+const dollars = (cents) => `$${Math.abs(cents / 100).toFixed(2)}`;
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+// worst food cost first, unpriced plates last
+const worstFirst = (a, b) => (priced(b) - priced(a)) || (b.foodCostPct - a.foodCostPct);
 
 export default function Dashboard() {
+  const fileRef = useRef(null);
+  const [file, setFile] = useState(null);
   const [dishes, setDishes] = useState(null);
-  const [changed, setChanged] = useState({}); // name -> old plate cost
-  const prev = useRef({});
+  const [deltas, setDeltas] = useState({}); // dish name -> plate cost change (cents) from the last saved invoice
+  const [summary, setSummary] = useState(null);
 
-  const refetch = useCallback(async () => {
+  async function load() {
     const data = await fetch("/api/dishes", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
-    if (!Array.isArray(data)) return;
-    const diff = {};
-    for (const d of data) if (prev.current[d.name] != null && prev.current[d.name] !== d.plateCost) diff[d.name] = prev.current[d.name];
-    prev.current = Object.fromEntries(data.map((d) => [d.name, d.plateCost]));
-    setDishes(data.sort((a, b) => b.foodCostPct - a.foodCostPct));
-    setChanged(diff);
-    if (Object.keys(diff).length) setTimeout(() => setChanged({}), 6000);
-  }, []);
+    if (!Array.isArray(data)) return null;
+    setDishes(data.sort(worstFirst));
+    return data;
+  }
+  useEffect(() => { load(); }, []);
 
-  useEffect(() => { refetch(); }, [refetch]);
+  async function saved(result) {
+    const before = Object.fromEntries((dishes ?? []).map((d) => [d.name, d.plateCost]));
+    const after = (await load()) ?? [];
+    const moved = {};
+    for (const d of after) if (priced(d) && before[d.name] > 0 && d.plateCost !== before[d.name]) moved[d.name] = d.plateCost - before[d.name];
+    setDeltas(moved);
+    const jumps = result.updated
+      .filter((u) => u.oldCost > 0)
+      .map((u) => ({ name: cap(u.ingredient), change: Math.round((u.newCost / u.oldCost - 1) * 100) }))
+      .filter((j) => j.change) // re-pricing at the same cost leaves float dust
+      .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+    setSummary({ count: result.updated.length, jumps, dishes: after.filter((d) => moved[d.name]).sort(worstFirst), skipped: result.skipped });
+  }
 
-  const flagged = dishes?.filter((d) => d.overTarget).length ?? 0;
-  const averageFoodCost = dishes?.length ? Math.round(dishes.reduce((sum, d) => sum + d.foodCostPct, 0) / dishes.length * 100) : 0;
+  const pricedDishes = dishes?.filter(priced) ?? [];
+  const over = pricedDishes.filter((d) => d.overTarget).length;
+  const average = pricedDishes.length ? Math.round(pricedDishes.reduce((s, d) => s + d.foodCostPct, 0) / pricedDishes.length * 100) : null;
 
   return (
-    <div className="space-y-10">
-      <section className="flex flex-col justify-between gap-5 border-b border-rule pb-8 md:flex-row md:items-end">
-        <div><p className="eyebrow">Owner desk / live costs</p><h1 className="mt-2 text-4xl font-bold tracking-tight md:text-6xl">Know what pays.</h1><p className="mt-3 max-w-xl text-lg text-ink">Your menu, priced against what is actually coming through the back door.</p></div>
-        <p className="mono text-xs text-ink">UPDATED WHEN AN INVOICE IS SAVED</p>
-      </section>
-      <section className="grid border-y border-rule md:grid-cols-3">
-        <Summary label="Dishes tracked" value={dishes ? dishes.length : "—"} detail="from your current menu" />
-        <Summary label="Needs attention" value={dishes ? flagged : "—"} detail={flagged ? "above your cost target" : "nothing flagged"} tone={flagged ? "loss" : "margin"} />
-        <Summary label="Average food cost" value={dishes ? `${averageFoodCost}%` : "—"} detail="across tracked dishes" />
-      </section>
-      <InvoiceUpload onSaved={refetch} />
-      <section>
-        <div className="mb-4 flex items-end justify-between border-b border-rule pb-3"><div><p className="eyebrow">Menu economics</p><h2 className="mt-1 text-2xl font-bold">Your plates</h2></div><span className="mono text-xs text-ink">TARGET / 35%</span></div>
-        {!dishes && <p className="py-8 text-ink">Loading menu costs…</p>}
-        <div className="space-y-2"><AnimatePresence initial={false}>{dishes?.map((d) => {
-          const margin = d.price - d.plateCost;
-          const old = changed[d.name];
-          return <motion.article key={d._id} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className={`border bg-surface ${d.overTarget ? "border-loss" : "border-rule"} ${old != null ? "ring-4 ring-action ring-offset-2 ring-offset-paper" : ""}`}>
-            <div className="grid gap-5 p-4 md:grid-cols-[minmax(220px,1.5fr)_repeat(3,minmax(110px,0.7fr)_)] md:items-center md:p-5">
-              <div><div className="flex flex-wrap items-center gap-2"><h3 className="text-xl font-bold">{d.name}</h3>{d.overTarget && <Badge tone="loss">Over cost target</Badge>}</div>{old != null && <p className="mono mt-2 text-xs text-loss">COST MOVED {formatDelta(d.plateCost - old)}</p>}</div>
-              <Stat label="Plate cost"><Money cents={d.plateCost} /></Stat><Stat label="Margin"><Money cents={margin} className={d.overTarget ? "text-loss" : "text-margin"} /></Stat><Stat label="Food cost"><span className={d.overTarget ? "text-loss" : ""}>{(d.foodCostPct * 100).toFixed(0)}%</span></Stat>
-              <Link href={`/owner/deal?dish=${encodeURIComponent(d.name)}`} className="flex min-h-12 items-center justify-center border-2 border-ink px-4 text-sm font-bold hover:bg-ink hover:text-paper md:min-w-32">Drop a deal</Link>
-            </div>
-          </motion.article>;
-        })}</AnimatePresence></div>
-      </section>
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="space-y-8">
+        <header className="flex flex-col gap-5 border-b border-rule pb-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Your plates</h1>
+            <p className="mt-2 text-lg md:text-xl">Food cost per plate, worst first. Target {TARGET}%.</p>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setSummary(null); setFile(f); } }} />
+          <Button className="md:shrink-0" onClick={() => fileRef.current.click()}>Upload invoice</Button>
+        </header>
+
+        {summary && <SavedSummary {...summary} />}
+
+        {!dishes && <p className="py-8">Loading menu costs…</p>}
+        {dishes?.length === 0 && (
+          <Card className="space-y-4 text-lg">
+            <p>No plates yet. Add your first plate to see its cost.</p>
+            <Link href="/owner/menu/new" className="inline-flex min-h-12 items-center border-2 border-ink px-5 font-bold hover:bg-ink hover:text-paper">Add a plate</Link>
+          </Card>
+        )}
+
+        {dishes?.length > 0 && (
+          <section className="grid grid-cols-3 gap-px border border-rule bg-rule" aria-label="Menu at a glance">
+            <Stat label="Plates tracked" value={dishes.length} />
+            <Stat label="Over cost target" value={over} tone={over ? "text-loss" : ""} />
+            <Stat label="Average food cost" value={average == null ? "—" : `${average}%`} />
+          </section>
+        )}
+
+        {dishes?.length > 0 && (
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <AnimatePresence initial={false}>
+              {dishes.map((d) => <DishCard key={d._id} d={d} delta={deltas[d.name]} />)}
+            </AnimatePresence>
+          </section>
+        )}
+
+        <InvoiceUpload file={file} onSaved={saved} />
+      </div>
+    </MotionConfig>
   );
 }
 
-function Summary({ label, value, detail, tone }) {
-  return <div className="border-b border-rule px-1 py-5 first:pl-0 last:border-b-0 md:border-b-0 md:border-r md:px-6 md:first:pl-0 md:last:border-r-0"><p className="eyebrow">{label}</p><p className={`mt-2 text-4xl font-bold tracking-tight ${tone === "loss" ? "text-loss" : tone === "margin" ? "text-margin" : ""}`}>{value}</p><p className="mt-1 text-sm text-ink">{detail}</p></div>;
-}
-
-function Stat({ label, children }) {
+function DishCard({ d, delta }) {
+  const has = priced(d);
+  const tone = !has ? "text-ink/50" : d.overTarget ? "text-loss" : "text-margin";
   return (
-    <dl><dt className="eyebrow">{label}</dt><dd className="mt-1 text-2xl font-bold md:text-3xl">{children}</dd></dl>
+    <motion.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+      className={`flex flex-col border border-l-4 border-rule bg-surface p-5 ${d.overTarget && has ? "border-l-loss" : ""}`}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <h3 className="text-xl font-bold md:text-2xl">{d.name}</h3>
+        {d.overTarget && has && <Badge tone="loss">Over cost target</Badge>}
+      </div>
+      <p className="mt-4 flex flex-wrap items-baseline gap-x-2">
+        <span className={`text-[32px] font-bold leading-none tabular-nums md:text-[40px] ${tone}`}>{has ? pct(d) : "—"}</span>
+        <span className="text-lg">food cost</span>
+      </p>
+      {delta ? (
+        <p className={`mt-3 self-start rounded-full border px-3 py-1 text-base font-bold tabular-nums ${delta > 0 ? "border-loss text-loss" : "border-ink"}`}>
+          {delta > 0 ? "↗ +" : "↘ −"}{dollars(delta)} since this invoice
+        </p>
+      ) : null}
+      {!has && <p className="mt-2 text-lg text-ink/70">Add prices to see this plate&apos;s cost</p>}
+      <dl className="mt-5 divide-y divide-rule border-t border-rule text-lg">
+        <Row label="Plate cost">{has ? <Money cents={d.plateCost} /> : "—"}</Row>
+        <Row label="Menu price"><Money cents={d.price} /></Row>
+        <Row label="Margin">{has ? <Money cents={d.price - d.plateCost} /> : "—"}</Row>
+      </dl>
+      <Link href={`/owner/deal?dish=${encodeURIComponent(d.name)}`} className="mt-4 self-start py-2 text-lg font-bold underline underline-offset-4 hover:no-underline">Drop a deal</Link>
+    </motion.div>
   );
 }
 
-function formatDelta(cents) { return `${cents >= 0 ? "+" : "-"}${Math.abs(cents / 100).toFixed(2)}`; }
+function Row({ label, children }) {
+  return <div className="flex justify-between gap-4 py-2"><dt className="text-ink/70">{label}</dt><dd className="font-bold tabular-nums">{children}</dd></div>;
+}
+
+function Stat({ label, value, tone = "" }) {
+  return <div className="bg-surface px-3 py-3 md:px-5 md:py-4"><p className="text-base leading-tight text-ink/70">{label}</p><p className={`mt-1 text-[32px] font-bold leading-none tabular-nums ${tone}`}>{value}</p></div>;
+}
+
+function SavedSummary({ count, jumps, dishes, skipped }) {
+  return (
+    <Card className="space-y-3 text-lg" role="status">
+      <h2 className="text-2xl font-bold">{count ? `Updated ${count} ingredient cost${count === 1 ? "" : "s"}` : "Nothing updated"}</h2>
+      {jumps.length > 0 && (
+        <p>
+          <span className="text-ink/70">Your biggest jumps: </span>
+          {jumps.map((j, i) => (
+            <span key={j.name}>{i ? ", " : ""}{j.name} <b className={`tabular-nums ${j.change > 0 ? "text-loss" : ""}`}>{j.change > 0 ? "+" : ""}{j.change}%</b></span>
+          ))}.
+        </p>
+      )}
+      {count > 0 && !jumps.length && <p>No price changes on this invoice.</p>}
+      {dishes.map((d) => (
+        <p key={d._id}>
+          <b>{d.name}</b> is now <b className={`tabular-nums ${d.overTarget ? "text-loss" : ""}`}>{pct(d)}</b> food cost
+          {d.overTarget ? <> — over your {TARGET}% target.</> : "."}
+        </p>
+      ))}
+      {skipped.length > 0 && (
+        <ul className="border-t border-rule pt-3 text-base text-ink/70">
+          {skipped.map((s, i) => <li key={i}>Not saved: <span className="mono">{s.description || "line"}</span> — {s.reason}</li>)}
+        </ul>
+      )}
+    </Card>
+  );
+}

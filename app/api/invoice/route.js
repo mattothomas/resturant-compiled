@@ -28,6 +28,10 @@ One object per line item:
 packCount is packs per case times cases shipped; linePrice is the extended line total.
 Example: "WINGS JUMBO 4/10LB 136.00" -> packCount 4, packSize 10, packUnit "lb", linePrice 136`;
 
+  // the AI echoes names loosely ("Chicken Wings ", "FLOUR"); snap back to the stored name or null
+  const canon = new Map(names.map((n) => [n.trim().toLowerCase(), n]));
+  const match = (l) => ({ ...l, ingredient: canon.get(String(l.ingredient ?? "").trim().toLowerCase()) ?? null });
+
   let text = "";
   for (let attempt = 0; attempt < 2; attempt++) {
     let msg;
@@ -42,7 +46,7 @@ Example: "WINGS JUMBO 4/10LB 136.00" -> packCount 4, packSize 10, packUnit "lb",
     }
     text = msg.content.filter((b) => b.type === "text").map((b) => b.text).join("");
     try {
-      return Response.json({ lines: parse(text) });
+      return Response.json({ lines: parse(text).map(match) });
     } catch {}
   }
   return Response.json({ error: "Couldn't read the invoice", raw: text }, { status: 502 });

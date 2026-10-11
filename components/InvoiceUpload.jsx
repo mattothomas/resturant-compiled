@@ -1,14 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Button, Card } from "@/components/ui";
-import { TO_BASE } from "@/lib/cost";
+import { Button, Badge } from "@/components/ui";
+import { TO_BASE, unitKind } from "@/lib/cost";
 
 const UNITS = Object.keys(TO_BASE);
-// show cents-per-base-unit the way an owner thinks about it
-const SHOW_PER = { g: "lb", ml: "gal", each: "each" };
-const perUnit = (cents, base) => `$${((cents * TO_BASE[SHOW_PER[base]]) / 100).toFixed(2)}/${SHOW_PER[base]}`;
 
-const blankLine = { description: "", ingredient: null, packCount: "", packSize: "", packUnit: "lb", linePrice: "" };
+const blankLine = { description: "", ingredient: null, suggested: null, packCount: "", packSize: "", packUnit: "lb", linePrice: "" };
 
 // phone photos can blow past Vercel's ~4.5 MB body limit
 async function shrink(file) {
@@ -22,28 +19,39 @@ async function shrink(file) {
     (b) => r(new File([b], "invoice.jpg", { type: "image/jpeg" })), "image/jpeg", 0.85));
 }
 
-const input = "min-h-11 w-full border border-rule bg-white px-2 text-sm";
+const input = "min-h-12 w-full border border-rule bg-white px-2 text-lg";
 
-export default function InvoiceUpload({ onSaved }) {
-  const fileRef = useRef(null);
+// `file` comes from the dashboard's "Upload invoice" button; a new File object starts a new read
+export default function InvoiceUpload({ file, onSaved }) {
+  const panelRef = useRef(null);
   const [ingredients, setIngredients] = useState([]);
   const [lines, setLines] = useState(null);
   const [busy, setBusy] = useState(""); // "" | "reading" | "saving"
   const [error, setError] = useState(null);
   const [raw, setRaw] = useState("");
-  const [result, setResult] = useState(null);
   const [meta, setMeta] = useState({}); // { vendor, date, fileName }
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     fetch("/api/ingredients", { cache: "no-store" }).then((r) => r.json()).then(setIngredients).catch(() => {});
   }, []);
   const unitOf = Object.fromEntries(ingredients.map((i) => [i.name, i.unit]));
 
-  async function upload(e) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  const started = useRef(null); // strict mode runs effects twice; read each file once
+  useEffect(() => {
     if (!file) return;
-    setBusy("reading"); setError(null); setRaw(""); setResult(null); setLines(null);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    if (started.current !== file) {
+      started.current = file;
+      upload(file);
+      panelRef.current?.scrollIntoView({ block: "start" });
+    }
+    return () => URL.revokeObjectURL(url);
+  }, [file]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function upload(file) {
+    setBusy("reading"); setError(null); setRaw(""); setLines(null);
     setMeta({ vendor: "", date: new Date().toLocaleDateString("en-CA"), fileName: file.name }); // en-CA = YYYY-MM-DD, local day
     try {
       const body = new FormData();
@@ -55,7 +63,7 @@ export default function InvoiceUpload({ onSaved }) {
         setRaw(data.raw || "");
         if (data.raw) setLines([{ ...blankLine }]); // type it in by hand
       } else {
-        setLines(data.lines.map((l) => ({ ...blankLine, ...l })));
+        setLines(data.lines.map((l) => ({ ...blankLine, ...l, suggested: l.ingredient ?? null })));
       }
     } catch {
       setError("Upload failed. Check your connection and try again.");
@@ -65,6 +73,8 @@ export default function InvoiceUpload({ onSaved }) {
   }
 
   const edit = (i, key, value) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, [key]: value } : l)));
+  const misfit = (l) => l.ingredient && unitOf[l.ingredient] && unitKind(l.packUnit) !== unitKind(unitOf[l.ingredient]);
+  const needLook = lines?.filter(misfit).length ?? 0;
 
   async function save() {
     setBusy("saving"); setError(null);
@@ -75,10 +85,10 @@ export default function InvoiceUpload({ onSaved }) {
         body: JSON.stringify({ ...meta, lines }),
       });
       if (!res.ok) throw new Error();
-      setResult(await res.json());
+      const result = await res.json();
       setLines(null);
       setRaw("");
-      onSaved?.();
+      onSaved?.(result);
     } catch {
       setError("Save failed. Try again.");
     } finally {
@@ -86,107 +96,100 @@ export default function InvoiceUpload({ onSaved }) {
     }
   }
 
-  return (
-    <Card className="space-y-5">
-      <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={upload} />
-      <Button onClick={() => fileRef.current.click()} disabled={!!busy}>
-        {busy === "reading" ? "Reading invoice…" : "Upload invoice"}
-      </Button>
-      {busy === "reading" && (
-        <p className="mono text-xs text-ink" role="status">READING EVERY LINE / ABOUT 20 SECONDS</p>
-      )}
+  if (!busy && !lines && !error) return <div ref={panelRef} />;
+  const isPdf = file?.type === "application/pdf";
 
-      {error && <p className="rounded-lg bg-loss px-4 py-3 font-bold text-white" role="alert">{error}</p>}
+  return (
+    <section ref={panelRef} className="scroll-mt-4 space-y-5 border border-rule bg-surface p-4 md:p-6">
+      {busy === "reading" && <p className="text-lg font-bold" role="status">Reading every line — about 20 seconds…</p>}
+      {error && <p className="border-2 border-ink bg-paper px-4 py-3 text-lg font-bold" role="alert">{error}</p>}
       {raw && (
-        <details className="text-base">
+        <details className="text-lg">
           <summary className="cursor-pointer font-bold">What the AI saw (type the numbers below)</summary>
-          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap border border-rule bg-paper p-3 text-sm">{raw}</pre>
+          <pre className="mono mt-2 overflow-x-auto whitespace-pre-wrap border border-rule bg-paper p-3 text-base">{raw}</pre>
         </details>
       )}
 
       {lines && (
-        <div className="space-y-4">
-          <h2 className="font-display text-2xl md:text-3xl">Check the lines, then save</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="block font-bold">Vendor
-              <input className={`${input} mt-1 min-h-14 text-xl`} value={meta.vendor} onChange={(e) => setMeta((m) => ({ ...m, vendor: e.target.value }))} />
-            </label>
-            <label className="block font-bold">Invoice date
-              <input type="date" required className={`${input} mt-1 min-h-14 text-xl`} value={meta.date} onChange={(e) => setMeta((m) => ({ ...m, date: e.target.value }))} />
-            </label>
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold md:text-3xl">Check the lines, then save</h2>
+            <span className={`rounded-full border-2 border-ink px-3 py-1 text-base font-bold ${needLook ? "bg-action" : ""}`} role="status">
+              {needLook ? `${needLook} line${needLook === 1 ? " needs" : "s need"} a look` : "✓ Ready"}
+            </span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead>
-                <tr className="border-b-2 border-ink">
-                  {["Description", "Ingredient", "Packs", "Size", "Unit", "Price ($)"].map((h) => (
-                    <th key={h} className="px-1 py-2 font-bold">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l, i) => (
-                  <tr key={i} className="border-b border-rule align-top">
-                    <td className="px-1 py-2"><input className={input} value={l.description ?? ""} onChange={(e) => edit(i, "description", e.target.value)} aria-label="Description" /></td>
-                    <td className="px-1 py-2">
-                      <select className={input} value={l.ingredient ?? ""} onChange={(e) => edit(i, "ingredient", e.target.value || null)} aria-label="Ingredient">
-                        <option value="">— not tracked —</option>
-                        {ingredients.map((g) => <option key={g.name} value={g.name}>{g.name}</option>)}
-                      </select>
-                    </td>
-                    <td className="w-20 px-1 py-2"><input className={input} type="number" min="0" step="any" value={l.packCount ?? ""} onChange={(e) => edit(i, "packCount", e.target.value)} aria-label="Pack count" /></td>
-                    <td className="w-24 px-1 py-2"><input className={input} type="number" min="0" step="any" value={l.packSize ?? ""} onChange={(e) => edit(i, "packSize", e.target.value)} aria-label="Pack size" /></td>
-                    <td className="w-24 px-1 py-2">
-                      <select className={input} value={l.packUnit ?? ""} onChange={(e) => edit(i, "packUnit", e.target.value)} aria-label="Unit">
-                        {UNITS.map((u) => <option key={u}>{u}</option>)}
-                      </select>
-                    </td>
-                    <td className="w-28 px-1 py-2"><input className={input} type="number" min="0" step="0.01" value={l.linePrice ?? ""} onChange={(e) => edit(i, "linePrice", e.target.value)} aria-label="Line price in dollars" /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex flex-col gap-3 md:flex-row">
-            <Button onClick={save} disabled={!!busy}>{busy === "saving" ? "Saving…" : "Save costs"}</Button>
-            <button type="button" className="min-h-12 border-2 border-ink px-5 text-sm font-bold hover:bg-ink hover:text-paper" onClick={() => setLines((ls) => [...ls, { ...blankLine }])}>
-              Add line
-            </button>
-          </div>
-        </div>
-      )}
 
-      {result && (
-        <div className="space-y-4">
-          <h2 className="font-display text-2xl md:text-3xl">
-            {result.updated.length ? `Updated ${result.updated.length} ingredient cost${result.updated.length === 1 ? "" : "s"}` : "Nothing updated"}
-          </h2>
-          <ul className="space-y-2">
-            {result.updated.map((u) => {
-              const up = u.newCost > u.oldCost, same = u.newCost === u.oldCost;
-              return (
-                <li key={u.ingredient} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule py-2">
-                  <span className="font-bold">{u.ingredient}</span>
-                  <span>
-                    {perUnit(u.oldCost, unitOf[u.ingredient] ?? "g")} →{" "}
-                    <span className={`font-bold ${same ? "" : up ? "text-loss" : "text-margin"}`}>
-                      {perUnit(u.newCost, unitOf[u.ingredient] ?? "g")} {same ? "no change" : up ? "▲ up" : "▼ down"}
-                    </span>
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          {result.skipped.length > 0 && (
-            <div>
-              <h3 className="text-xl font-bold">Skipped</h3>
-              <ul className="list-disc pl-6 text-base">
-                {result.skipped.map((s, i) => <li key={i}><span className="font-bold">{s.description || "(no description)"}</span>: {s.reason}</li>)}
-              </ul>
+          <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-start">
+            {preview && (isPdf ? (
+              <p className="mono self-start border border-rule bg-paper px-3 py-2 text-base">PDF · {file.name}</p>
+            ) : (
+              <>
+                <img src={preview} alt="Uploaded invoice" className="hidden max-h-[85vh] w-full border border-rule object-contain object-top md:sticky md:top-4 md:block" />
+                <details className="md:hidden">
+                  <summary className="flex cursor-pointer items-center gap-3 text-lg font-bold">
+                    <img src={preview} alt="" className="h-16 w-12 border border-rule object-cover object-top" />
+                    View invoice
+                  </summary>
+                  <img src={preview} alt="Uploaded invoice" className="mt-3 w-full border border-rule" />
+                </details>
+              </>
+            ))}
+
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-base font-bold">Vendor
+                  <input className={`${input} mt-1`} value={meta.vendor} onChange={(e) => setMeta((m) => ({ ...m, vendor: e.target.value }))} />
+                </label>
+                <label className="block text-base font-bold">Invoice date
+                  <input type="date" required className={`${input} mt-1`} value={meta.date} onChange={(e) => setMeta((m) => ({ ...m, date: e.target.value }))} />
+                </label>
+              </div>
+              <ol className="space-y-3">
+                {lines.map((l, i) => <LineRow key={i} l={l} set={(k, v) => edit(i, k, v)} ingredients={ingredients} misfit={misfit(l)} />)}
+              </ol>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <Button onClick={save} disabled={!!busy}>{busy === "saving" ? "Saving…" : "Save costs"}</Button>
+                <button type="button" className="min-h-12 px-2 text-lg font-bold underline underline-offset-4 hover:no-underline" onClick={() => setLines((ls) => [...ls, { ...blankLine }])}>
+                  Add line
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
-    </Card>
+    </section>
   );
+}
+
+function LineRow({ l, set, ingredients, misfit }) {
+  const unmatched = !l.ingredient;
+  const unit = ingredients.find((g) => g.name === l.ingredient)?.unit;
+  return (
+    <li data-line className={`space-y-2 border p-3 ${unmatched ? "border-rule bg-paper" : misfit ? "border-2 border-ink bg-white" : "border-rule bg-white"}`}>
+      <p className="mono break-words text-base text-ink/70">{l.description || "Added by hand"}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <select className={`${input} flex-1 font-bold ${unmatched ? "text-ink/60" : ""}`} value={l.ingredient ?? ""} onChange={(e) => set("ingredient", e.target.value || null)} aria-label="Ingredient">
+          <option value="">Not one of your ingredients</option>
+          {ingredients.map((g) => <option key={g.name} value={g.name}>{g.name}</option>)}
+        </select>
+        {l.suggested && l.ingredient === l.suggested && <Badge>Suggested</Badge>}
+      </div>
+      {unmatched && <p className="text-base text-ink/70">Skipped — not one of your ingredients</p>}
+      {misfit && <p className="text-base font-bold">{l.ingredient} is counted by {unitKind(unit)}, so &ldquo;{l.packUnit}&rdquo; won&apos;t work. Pick a {unitKind(unit)} unit.</p>}
+      <div className={`grid grid-cols-2 gap-2 sm:grid-cols-4 ${unmatched ? "opacity-60" : ""}`}>
+        <Field label="Packs"><input className={input} type="number" min="0" step="any" inputMode="decimal" value={l.packCount ?? ""} onChange={(e) => set("packCount", e.target.value)} aria-label="Pack count" /></Field>
+        <Field label="Size"><input className={input} type="number" min="0" step="any" inputMode="decimal" value={l.packSize ?? ""} onChange={(e) => set("packSize", e.target.value)} aria-label="Pack size" /></Field>
+        <Field label="Unit">
+          <select className={input} value={l.packUnit ?? ""} onChange={(e) => set("packUnit", e.target.value)} aria-label="Unit">
+            {UNITS.map((u) => <option key={u}>{u}</option>)}
+          </select>
+        </Field>
+        <Field label="Price ($)"><input className={input} type="number" min="0" step="0.01" inputMode="decimal" value={l.linePrice ?? ""} onChange={(e) => set("linePrice", e.target.value)} aria-label="Line price in dollars" /></Field>
+      </div>
+    </li>
+  );
+}
+
+function Field({ label, children }) {
+  return <label className="block text-base">{label}<span className="mt-1 block">{children}</span></label>;
 }

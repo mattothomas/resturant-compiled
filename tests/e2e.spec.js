@@ -40,7 +40,7 @@ test("invoice → over target → deal → claims → sold out", async ({ browse
   await test.step("2. upload invoice, confirm wings line, save", async () => {
     await page.locator('input[type="file"]').setInputFiles("tests/fixtures/sample-invoice.png");
     await expect(page.getByRole("heading", { name: "Check the lines, then save" })).toBeVisible({ timeout: 90_000 });
-    const rows = await page.$$eval("tbody tr", (trs) => trs.map((tr) => {
+    const rows = await page.$$eval("[data-line]", (trs) => trs.map((tr) => {
       const v = (label) => tr.querySelector(`[aria-label="${label}"]`).value;
       return { ingredient: v("Ingredient"), packCount: v("Pack count"), packSize: v("Pack size"), unit: v("Unit"), price: v("Line price in dollars") };
     }));
