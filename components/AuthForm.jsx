@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button, Card } from "@/components/ui";
 
-const field = "mt-1 block min-h-14 w-full rounded-xl border-2 border-navy bg-white px-3 text-xl";
+const field = "mt-2 block min-h-12 w-full border border-rule bg-white px-3 text-base";
 
 export default function AuthForm({ signup }) {
   const [error, setError] = useState("");
@@ -24,9 +24,9 @@ export default function AuthForm({ signup }) {
   }
 
   return (
-    <Card className="mx-auto max-w-md">
+    <Card className="mx-auto max-w-md border-ink">
       <form onSubmit={submit} className="space-y-5">
-        <h1 className="font-display text-3xl md:text-5xl">{signup ? "Sign up" : "Log in"}</h1>
+        <div><p className="eyebrow">Keep College Ave cooking</p><h1 className="mt-2 text-4xl font-bold tracking-tight">{signup ? "Set up your owner desk." : "Welcome back."}</h1><p className="mt-3 text-ink">Manage real costs, then move what needs a good home tonight.</p></div>
         {signup && (
           <label className="block font-bold">Restaurant name
             <input name="restaurantName" required autoComplete="organization" className={field} />
