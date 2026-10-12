@@ -33,8 +33,9 @@ export default function Page() {
     <div className="flex flex-col gap-16 md:gap-24">
       <section className="grid gap-10 pt-4 md:grid-cols-[1fr_300px] md:items-center md:gap-12 md:pt-8">
         <div className="flex min-w-0 flex-col gap-6">
-          <h1 className="text-[40px] font-bold leading-[1.05] tracking-tight md:text-[72px]">Keep College Ave cooking.</h1>
-          <p className="text-xl text-ink/75">Know what every plate costs. Move tonight&apos;s leftovers to hungry students.</p>
+          <p className="eyebrow">State College / every plate has a moment</p>
+          <h1 className="text-[40px] font-bold leading-[0.98] tracking-tight md:text-[72px]">The food is ready.<br /><span className="text-loss">Make it count.</span></h1>
+          <p className="max-w-2xl text-xl text-ink/75">Restaurants see the real cost. Students find the right plate at the right time.</p>
           <Doors />
         </div>
         <DealDrop />
@@ -42,13 +43,13 @@ export default function Page() {
 
       {count && (
         <div className="flex items-center justify-between gap-4 border-y-2 border-ink py-4 text-xl font-bold md:text-2xl">
-          <span><span>Live now:</span> {count} {count === 1 ? "deal" : "deals"} downtown</span>
+          <span><span className="text-loss">Make it count:</span> {count} {count === 1 ? "deal" : "deals"} live downtown</span>
           <span className="mono text-base text-ink">ENDING TONIGHT</span>
         </div>
       )}
 
       <section className="flex flex-col gap-6">
-        <h2 className="text-[28px] font-bold md:text-[40px]">How it works</h2>
+        <div><p className="eyebrow">One system / two sides</p><h2 className="mt-2 text-[28px] font-bold md:text-[40px]">Make it count.</h2></div>
         <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1fr)]">
           <Card className="flex min-w-0 flex-col gap-4">
             <h3 className="text-2xl font-bold">For owners</h3>
@@ -79,13 +80,13 @@ export default function Page() {
 
       <section>
         <blockquote className="border-l-4 border-action bg-surface p-6">
-          <p className="text-2xl font-bold md:text-3xl">Good food should not become a spreadsheet problem.</p>
+          <p className="text-2xl font-bold md:text-3xl">Know the cost. Move the food. Make it count.</p>
           <footer className="mono mt-3 text-base text-ink">THE IDEA / COLLEGE AVE</footer>
         </blockquote>
       </section>
 
       <footer className="flex flex-col gap-6 bg-ink p-6 text-paper md:p-10">
-        <h2 className="text-3xl font-bold md:text-5xl">Hungry or cooking?</h2>
+        <h2 className="text-3xl font-bold md:text-5xl">Hungry or cooking? Make it count.</h2>
         <Doors dark />
       </footer>
     </div>
